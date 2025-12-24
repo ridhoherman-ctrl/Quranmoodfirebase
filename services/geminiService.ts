@@ -2,34 +2,30 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { HealingContent, MoodType } from "../types";
 
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 export const generateHealingContent = async (mood: MoodType): Promise<HealingContent> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error("API Key is missing. Please use the 'Set API Key' button to configure your access.");
+    throw new Error("API Key is missing. Silakan gunakan tombol 'Atur API Key' untuk memasukkan kunci Gemini Anda.");
   }
 
-  // Create instance right before call as per instructions
   const ai = new GoogleGenAI({ apiKey });
-
   const uniqueSeed = Math.floor(Math.random() * 1000000);
-  const timestamp = new Date().toISOString();
 
   const systemInstruction = `
-    Anda adalah seorang Ahli Tafsir Al-Quran, Pakar Hadits, dan Psikolog Spiritual Islami yang sangat bijaksana.
-    
-    PRINSIP KERJA:
-    1. VARIASI TINGGI: Untuk mood "${mood}", pilih satu ayat Al-Quran secara acak yang unik dari 20+ ayat relevan.
-    2. KORELASI TERKUNCI (CONTEXT LOCK): Seluruh konten (Hadist, Hikmah, Amalan, Refleksi) HARUS merujuk langsung pada pesan spesifik dari ayat tersebut.
-    3. Bahasa: Hangat, empatik, dan menenangkan.
+    Anda adalah seorang Ahli Tafsir Al-Quran dan Psikolog Spiritual Islami yang bijaksana.
+    TUGAS: Berikan ayat Al-Quran dan Hadist yang paling relevan untuk menenangkan seseorang yang sedang merasa "${mood}".
+    BAHASA: Gunakan Bahasa Indonesia yang sangat empati, hangat, dan puitis.
   `;
 
-  const prompt = `
-    Mood Pengguna: "${mood}"
-    Random Seed: ${uniqueSeed}
-    Waktu: ${timestamp}
-
-    TUGAS: Pilih ayat penenang yang relevan, cari hadist yang senada, dan susun hikmah serta amalan praktis.
-  `;
+  const prompt = `Berikan refleksi spiritual untuk suasana hati: ${mood}. Seed: ${uniqueSeed}`;
 
   try {
     const response = await ai.models.generateContent({
@@ -37,8 +33,7 @@ export const generateHealingContent = async (mood: MoodType): Promise<HealingCon
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
-        temperature: 1.0,
-        topP: 0.95,
+        temperature: 0.9,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -55,16 +50,15 @@ export const generateHealingContent = async (mood: MoodType): Promise<HealingCon
                 translation: { type: Type.STRING },
                 reflection: { type: Type.STRING },
               },
-              required: ["surahName", "surahNumber", "ayahNumber", "arabicText", "translation", "reflection"]
+              required: ["surahName", "surahNumber", "ayahNumber", "arabicText", "translation"]
             },
             hadith: {
               type: Type.OBJECT,
               properties: {
                 source: { type: Type.STRING },
                 text: { type: Type.STRING },
-                reflection: { type: Type.STRING },
               },
-              required: ["source", "text", "reflection"]
+              required: ["source", "text"]
             },
             wisdom: { type: Type.STRING },
             practicalSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -78,16 +72,15 @@ export const generateHealingContent = async (mood: MoodType): Promise<HealingCon
     return JSON.parse(response.text || '{}') as HealingContent;
   } catch (error) {
     console.error("Gemini Error:", error);
-    throw new Error("Maaf, sedang ada kendala teknis saat menghubungi server AI. Silakan coba lagi.");
+    throw error;
   }
 };
 
 export const generateSpeech = async (text: string): Promise<string> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) throw new Error("API Key is missing.");
   
   const ai = new GoogleGenAI({ apiKey });
-
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -101,12 +94,11 @@ export const generateSpeech = async (text: string): Promise<string> => {
         },
       },
     });
-
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("No audio data returned");
+    if (!base64Audio) throw new Error("No audio data");
     return base64Audio;
   } catch (error) {
     console.error("TTS Error:", error);
-    throw new Error("Gagal menghasilkan suara.");
+    throw error;
   }
 };
