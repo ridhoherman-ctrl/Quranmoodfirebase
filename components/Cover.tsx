@@ -4,9 +4,10 @@ import { loginWithEmail, registerWithEmail } from '../services/firebase';
 
 interface CoverProps {
   onStart: () => void;
+  onOpenKeySelector?: () => void;
 }
 
-const Cover: React.FC<CoverProps> = () => {
+const Cover: React.FC<CoverProps> = ({ onOpenKeySelector }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -132,6 +133,15 @@ const Cover: React.FC<CoverProps> = () => {
               )}
             </button>
           </form>
+          
+          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center">
+            <button 
+              onClick={onOpenKeySelector}
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline uppercase tracking-widest flex items-center gap-2"
+            >
+              <span>🔑</span> Atur API Key Manual
+            </button>
+          </div>
         </div>
 
         <p className="mt-8 text-xs text-slate-400 dark:text-slate-600 text-center max-w-[200px]">

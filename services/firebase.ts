@@ -1,5 +1,5 @@
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp, FirebaseApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
@@ -7,30 +7,58 @@ import {
   signOut, 
   onAuthStateChanged,
   updateProfile,
-  User 
+  Auth
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
   getFirestore, 
   doc, 
   getDoc, 
   setDoc, 
-  onSnapshot 
+  onSnapshot,
+  Firestore
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // KONFIGURASI FIREBASE
-// Pastikan Anda mengganti ini dengan konfigurasi dari Firebase Console Anda
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: `${process.env.FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
+  messagingSenderId: process.env.FIREBASE_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Cek apakah konfigurasi lengkap
+export const isFirebaseConfigured = !!(
+  process.env.FIREBASE_API_KEY && 
+  process.env.FIREBASE_PROJECT_ID && 
+  process.env.FIREBASE_APP_ID
+);
+
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+  } catch (error) {
+    console.error("Firebase init error:", error);
+  }
+}
+
+export { auth, db };
+
+// Exporting Firebase functions for consistent usage
+export { 
+  onAuthStateChanged, 
+  onSnapshot, 
+  doc, 
+  getDoc, 
+  setDoc 
+};
 
 export type UserStatus = 'pending' | 'approved' | 'blocked';
 
@@ -43,16 +71,14 @@ export interface UserProfile {
   requestedAt: number;
 }
 
-// Fungsi Registrasi Baru
 export const registerWithEmail = async (name: string, email: string, pass: string) => {
+  if (!auth || !db) throw new Error("Firebase is not configured");
   try {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
     const user = result.user;
 
-    // Update profil di Firebase Auth (untuk displayName)
     await updateProfile(user, { displayName: name });
 
-    // Simpan ke Firestore dengan status PENDING
     const newUser: UserProfile = {
       uid: user.uid,
       email: email,
@@ -70,8 +96,8 @@ export const registerWithEmail = async (name: string, email: string, pass: strin
   }
 };
 
-// Fungsi Login
 export const loginWithEmail = async (email: string, pass: string) => {
+  if (!auth) throw new Error("Firebase is not configured");
   try {
     const result = await signInWithEmailAndPassword(auth, email, pass);
     return result.user;
@@ -81,4 +107,4 @@ export const loginWithEmail = async (email: string, pass: string) => {
   }
 };
 
-export const logout = () => signOut(auth);
+export const logout = () => auth && signOut(auth);

@@ -24,6 +24,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ data, onReset, onRefres
   const [savedEntry, setSavedEntry] = useState('');
   const [isEditing, setIsEditing] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
   
   // Favorites State
   const [isQuranSaved, setIsQuranSaved] = useState(false);
@@ -58,6 +59,12 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ data, onReset, onRefres
     setShowSuccess(true);
     
     setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopyStatus(label);
+    setTimeout(() => setCopyStatus(null), 2000);
   };
 
   const handleEdit = () => {
@@ -141,6 +148,13 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ data, onReset, onRefres
             <div className="flex flex-col items-end gap-3">
               <div className="flex items-center gap-3">
                  <button 
+                  onClick={() => handleCopy(`${data.quran.arabicText}\n\n${data.quran.translation}\n(QS. ${data.quran.surahName}: ${data.quran.ayahNumber})`, "Ayat disalin")}
+                  className="p-2 rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-slate-400 hover:text-emerald-500 transition-colors"
+                  title="Salin Ayat"
+                 >
+                   {copyStatus === "Ayat disalin" ? "✅" : "📋"}
+                 </button>
+                 <button 
                   onClick={toggleFavoriteQuran}
                   className="p-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
                   title={isQuranSaved ? "Hapus dari Favorit" : "Simpan ke Favorit"}
@@ -199,6 +213,13 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ data, onReset, onRefres
               Hadist
             </span>
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => handleCopy(`${data.hadith.text}\n(${data.hadith.source})`, "Hadist disalin")}
+                className="p-2 rounded-full hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-slate-400 hover:text-yellow-600 transition-colors"
+                title="Salin Hadist"
+              >
+                {copyStatus === "Hadist disalin" ? "✅" : "📋"}
+              </button>
               <button 
                 onClick={toggleFavoriteHadith}
                 className="p-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors mr-1"
