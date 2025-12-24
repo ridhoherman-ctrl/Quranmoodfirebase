@@ -2,39 +2,43 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { HealingContent, MoodType } from "../types";
 
+// Helper untuk mendapatkan API Key dengan aman di lingkungan Vite
+const getApiKey = () => {
+  const key = process.env.API_KEY;
+  if (!key || key === "undefined" || key === "") {
+    console.error("DEBUG: API_KEY tidak ditemukan di environment variables.");
+    return null;
+  }
+  return key;
+};
+
 export const generateHealingContent = async (mood: MoodType): Promise<HealingContent> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
+  
   if (!apiKey) {
-    throw new Error("Sistem sedang menyiapkan koneksi. Mohon tunggu sebentar.");
+    throw new Error("Konfigurasi API Key belum terdeteksi. Silakan periksa file .env atau pengaturan environment Anda.");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Selalu gunakan inisialisasi baru untuk memastikan key terbaru digunakan
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   const uniqueSeed = Math.floor(Math.random() * 999999);
-  // Random nonce to break AI's tendency to repeat common answers
-  const randomNonce = btoa(Math.random().toString()).substring(0, 8);
 
   const systemInstruction = `
     Anda adalah seorang Ahli Tafsir Al-Quran dan Psikolog Spiritual Islami.
     TUGAS: Berikan SATU set refleksi (Ayat, Hadist, Hikmah, Amalan) yang sangat mendalam untuk mood "${mood}".
     
-    ATURAN VARIASI (PENTING):
-    - Gunakan pengacak internal dengan ID: ${uniqueSeed}-${randomNonce}.
-    - JANGAN memberikan ayat yang sama jika dipicu ulang. Jelajahi surah-surah yang jarang dikutip namun sangat relevan (seperti Al-Anbiya, Fatir, Az-Zumar, Ar-Ra'd, dll).
-    - Hindari memberikan Al-Baqarah 153 atau 155 kecuali benar-benar sangat diperlukan.
-    - Pastikan ayat yang dipilih benar-benar spesifik menyentuh akar perasaan ${mood}.
-    
-    ATURAN RELEVANSI:
-    - Hadist, Hikmah, Amalan, dan Renungan Hati HARUS merujuk langsung pada pesan spesifik ayat yang Anda pilih. 
-    - Semuanya harus membentuk satu kesatuan tema yang utuh.
+    ATURAN VARIASI:
+    - Jelajahi surah-surah yang relevan namun jarang dikutip (bukan hanya Al-Baqarah).
+    - Berikan respon dalam Bahasa Indonesia yang sangat menenangkan dan puitis.
   `;
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Berikan refleksi spiritual untuk mood ${mood}. [Request ID: ${randomNonce}]`,
+      contents: `Berikan refleksi spiritual untuk seseorang yang sedang merasa ${mood}.`,
       config: {
         systemInstruction: systemInstruction,
-        temperature: 1.0, 
+        temperature: 0.9, 
         seed: uniqueSeed,
         responseMimeType: "application/json",
         responseSchema: {
@@ -63,44 +67,55 @@ export const generateHealingContent = async (mood: MoodType): Promise<HealingCon
               required: ["source", "text"]
             },
             wisdom: { type: Type.STRING },
-            practicalSteps: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 3 },
-            reflectionQuestions: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 2 }
+            practicalSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
+            reflectionQuestions: { type: Type.ARRAY, items: { type: Type.STRING } }
           },
           required: ["mood", "summary", "quran", "hadith", "wisdom", "practicalSteps", "reflectionQuestions"]
         }
       }
     });
 
-    return JSON.parse(response.text || '{}') as HealingContent;
+    if (!response.text) {
+      throw new Error("AI tidak mengembalikan teks. Periksa kuota API atau status model.");
+    }
+
+    return JSON.parse(response.text) as HealingContent;
   } catch (error: any) {
-    console.error("Gemini Error:", error);
-    throw new Error("Maaf, hati sedang sulit dijangkau. Coba tekan tombol sekali lagi.");
+    console.error("Gemini Error Details:", error);
+    
+    // Memberikan pesan error yang lebih spesifik jika API Key bermasalah
+    if (error.message?.includes("API key not valid")) {
+      throw new Error("API Key Gemini tidak valid. Silakan periksa kembali di Google AI Studio.");
+    }
+    
+    throw new Error("Gagal mengambil inspirasi langit. Silakan coba sesaat lagi.");
   }
 };
 
 export const generateSpeech = async (text: string): Promise<string> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("Koneksi suara belum siap.");
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("Fitur suara tidak tersedia tanpa API Key.");
   
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: { parts: [{ text }] },
+      contents: [{ parts: [{ text: `Bacakan dengan tenang dan penuh hikmah: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Puck' }, 
+            prebuiltVoiceConfig: { voiceName: 'Kore' }, 
           },
         },
       },
     });
+    
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("Gagal mendapatkan data suara.");
+    if (!base64Audio) throw new Error("Data suara tidak ditemukan.");
     return base64Audio;
   } catch (error: any) {
     console.error("TTS Error:", error);
-    throw error;
+    throw new Error("Maaf, suara hikmah sedang tidak tersedia.");
   }
 };

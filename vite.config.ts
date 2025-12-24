@@ -8,11 +8,12 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Kita biarkan API_KEY dikelola oleh environment agar tidak bentrok
-      'process.env.FIREBASE_API_KEY': JSON.stringify(env.FIREBASE_API_KEY),
-      'process.env.FIREBASE_PROJECT_ID': JSON.stringify(env.FIREBASE_PROJECT_ID),
-      'process.env.FIREBASE_SENDER_ID': JSON.stringify(env.FIREBASE_SENDER_ID),
-      'process.env.FIREBASE_APP_ID': JSON.stringify(env.FIREBASE_APP_ID)
+      // Menggunakan fallback string kosong agar tidak menyebabkan crash jika env tidak diset
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || ""),
+      'process.env.FIREBASE_API_KEY': JSON.stringify(env.FIREBASE_API_KEY || ""),
+      'process.env.FIREBASE_PROJECT_ID': JSON.stringify(env.FIREBASE_PROJECT_ID || ""),
+      'process.env.FIREBASE_SENDER_ID': JSON.stringify(env.FIREBASE_SENDER_ID || ""),
+      'process.env.FIREBASE_APP_ID': JSON.stringify(env.FIREBASE_APP_ID || "")
     }
   };
 });
