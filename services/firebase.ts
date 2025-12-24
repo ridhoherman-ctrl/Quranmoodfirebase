@@ -17,8 +17,8 @@ import {
   onSnapshot,
   Firestore
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { UserProfile } from "../types";
 
-// Fungsi pembantu untuk akses safe env
 const getEnv = (key: string) => {
   try {
     return process.env[key];
@@ -36,7 +36,6 @@ const firebaseConfig = {
   appId: getEnv('FIREBASE_APP_ID')
 };
 
-// Cek apakah konfigurasi lengkap
 export const isFirebaseConfigured = !!(
   getEnv('FIREBASE_API_KEY') && 
   getEnv('FIREBASE_PROJECT_ID') && 
@@ -60,28 +59,18 @@ if (isFirebaseConfigured) {
 export { auth, db };
 export { onAuthStateChanged, onSnapshot, doc, getDoc, setDoc };
 
-export type UserStatus = 'pending' | 'approved' | 'blocked';
-
-export interface UserProfile {
-  uid: string;
-  email: string;
-  displayName: string;
-  photoURL: string;
-  status: UserStatus;
-  requestedAt: number;
-}
-
 export const registerWithEmail = async (name: string, email: string, pass: string) => {
   if (!auth || !db) throw new Error("Firebase belum dikonfigurasi.");
   const result = await createUserWithEmailAndPassword(auth, email, pass);
   const user = result.user;
   await updateProfile(user, { displayName: name });
+  
   const newUser: UserProfile = {
     uid: user.uid,
     email: email,
     displayName: name,
     photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
-    status: 'pending',
+    status: 'pending', // All new users start as pending
     requestedAt: Date.now()
   };
   await setDoc(doc(db, "users", user.uid), newUser);
@@ -90,8 +79,7 @@ export const registerWithEmail = async (name: string, email: string, pass: strin
 
 export const loginWithEmail = async (email: string, pass: string) => {
   if (!auth) throw new Error("Firebase belum dikonfigurasi.");
-  const result = await signInWithEmailAndPassword(auth, email, pass);
-  return result.user;
+  return await signInWithEmailAndPassword(auth, email, pass);
 };
 
 export const logout = () => auth && signOut(auth);

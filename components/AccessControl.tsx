@@ -1,6 +1,8 @@
 
 import React, { ReactNode } from 'react';
-import { UserProfile, logout } from '../services/firebase';
+// Fix: Import UserProfile from types.ts instead of services/firebase.ts
+import { UserProfile } from '../types';
+import { logout } from '../services/firebase';
 
 interface AccessControlProps {
   userProfile: UserProfile | null;

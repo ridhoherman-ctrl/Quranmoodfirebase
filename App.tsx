@@ -1,18 +1,17 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import MoodSelector from './components/MoodSelector';
 import ContentDisplay from './components/ContentDisplay';
 import Dashboard from './components/Dashboard';
 import Cover from './components/Cover';
 import AccessControl from './components/AccessControl';
-import { HealingContent, MoodType } from './types';
+import { HealingContent, MoodType, UserProfile } from './types';
 import { generateHealingContent } from './services/geminiService';
 import { saveMoodLog } from './services/historyService';
 import { getMoodConfig, getRandomLoadingMessage } from './constants';
 import { 
   auth, 
   db, 
-  UserProfile, 
   logout, 
   onAuthStateChanged, 
   onSnapshot, 
@@ -31,10 +30,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showDashboard, setShowDashboard] = useState<boolean>(false);
-  const [loadingMessage, setLoadingMessage] = useState<string>("");
-  const [currentLogId, setCurrentLogId] = useState<string | undefined>(undefined);
-  
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
 
   useEffect(() => {
     if (!isFirebaseConfigured || !auth || !db) {
@@ -42,13 +39,16 @@ const App: React.FC = () => {
       return;
     }
 
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: any) => {
       if (currentUser) {
         setUser(currentUser);
-        const unsubscribeProfile = onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
+        const unsubscribeProfile = onSnapshot(doc(db!, "users", currentUser.uid), (docSnap) => {
           if (docSnap.exists()) {
             setUserProfile(docSnap.data() as UserProfile);
           }
+          setAuthLoading(false);
+        }, (err) => {
+          console.error("Profile Fetch Error:", err);
           setAuthLoading(false);
         });
         return () => unsubscribeProfile();
@@ -77,31 +77,15 @@ const App: React.FC = () => {
     localStorage.setItem('theme', newMode ? 'dark' : 'light');
   };
 
-  const handleOpenKeySelector = async () => {
-    try {
-      if (window.aistudio && window.aistudio.openSelectKey) {
-        await window.aistudio.openSelectKey();
-        if (selectedMood) handleMoodSelect(selectedMood);
-      } else {
-        alert("Fitur pemilihan kunci tidak tersedia di lingkungan ini.");
-      }
-    } catch (err) {
-      console.error("Failed to open key selector", err);
-    }
-  };
-
   const fetchContent = async (mood: MoodType) => {
     setLoading(true);
+    setLoadingMessage(getRandomLoadingMessage(mood));
     setError(null);
     try {
       const data = await generateHealingContent(mood);
       setContent(data);
     } catch (err: any) {
-      let errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan.";
-      if (errorMsg.includes("API Key is missing") || errorMsg.includes("not found")) {
-        errorMsg = "API Key Gemini belum diset atau tidak valid. Silakan klik 'Atur API Key' di pojok atas atau di bawah.";
-      }
-      setError(errorMsg);
+      setError(err.message || "Terjadi kendala koneksi.");
       setSelectedMood(null);
     } finally {
       setLoading(false);
@@ -110,8 +94,7 @@ const App: React.FC = () => {
 
   const handleMoodSelect = async (mood: MoodType) => {
     setSelectedMood(mood);
-    const log = saveMoodLog(mood);
-    setCurrentLogId(log.id);
+    saveMoodLog(mood);
     await fetchContent(mood);
   };
 
@@ -124,43 +107,17 @@ const App: React.FC = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-emerald-600 dark:text-emerald-400 font-medium">Menghubungkan Qalbu...</p>
-      </div>
-    );
-  }
-
-  if (!isFirebaseConfigured && !demoMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 dark:from-slate-950 dark:to-emerald-950 flex items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-emerald-100 dark:border-emerald-900/30 animate-scaleIn">
-          <div className="text-6xl mb-6">🕌</div>
-          <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 mb-4">Selamat Datang di Qur'an Mood</h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            Untuk pengalaman penuh (simpan riwayat & favorit), silakan hubungkan Firebase. Jika hanya ingin mencoba, Anda bisa masuk menggunakan <b>Mode Demo</b>.
-          </p>
-          <div className="space-y-4">
-            <button 
-              onClick={() => setDemoMode(true)}
-              className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg hover:bg-emerald-700 transition-all active:scale-95"
-            >
-              Masuk Mode Demo
-            </button>
-            <button 
-              onClick={handleOpenKeySelector}
-              className="w-full py-4 bg-amber-500 text-white rounded-2xl font-bold shadow-lg hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              🔑 Atur API Key Gemini
-            </button>
-          </div>
-          <p className="mt-8 text-xs text-slate-400 uppercase tracking-widest font-bold italic">Ketenangan jiwa dalam genggaman</p>
+        <div className="relative mb-8">
+           <div className="absolute inset-0 bg-emerald-400 blur-3xl opacity-20 animate-pulse"></div>
+           <div className="w-20 h-20 border-4 border-emerald-500/10 border-t-emerald-500 rounded-full animate-spin"></div>
         </div>
+        <p className="text-emerald-600 dark:text-emerald-400 font-bold tracking-[0.2em] animate-pulse text-xs uppercase">Menghubungkan Qalbu</p>
       </div>
     );
   }
 
   if (!user && !demoMode) {
-    return <Cover onStart={() => {}} onOpenKeySelector={handleOpenKeySelector} />; 
+    return <Cover onStart={() => {}} />; 
   }
 
   const currentConfig = selectedMood ? getMoodConfig(selectedMood) : null;
@@ -171,49 +128,75 @@ const App: React.FC = () => {
       <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] dark:invert"></div>
       
       <main className="relative z-10 max-w-5xl mx-auto px-4 py-8 md:py-12 min-h-screen flex flex-col items-center">
-        {/* Header Section */}
         <div className="w-full flex justify-between items-center mb-12 px-2">
            <div className="flex items-center gap-3">
-              <img 
-                src={`https://ui-avatars.com/api/?name=${userProfile?.displayName || 'Tamu'}&background=059669&color=fff`} 
-                className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                alt="Profile"
-              />
+              <div className="relative group">
+                 <div className="absolute -inset-1 bg-gradient-to-tr from-emerald-400 to-teal-400 rounded-full blur opacity-40 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+                 <img 
+                    src={userProfile?.photoURL || `https://ui-avatars.com/api/?name=User&background=059669&color=fff`} 
+                    className="relative w-11 h-11 rounded-full border-2 border-white dark:border-slate-800 shadow-lg object-cover"
+                    alt="Profile"
+                  />
+              </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 dark:text-white">Assalamualaikum,</span>
-                <span className="text-sm font-bold dark:text-white">{userProfile?.displayName || 'Tamu'}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 dark:text-emerald-400">Assalamualaikum,</span>
+                <span className="text-sm font-bold dark:text-white leading-tight">{userProfile?.displayName || 'Tamu'}</span>
               </div>
            </div>
 
            <div className="flex gap-2">
-              <button onClick={handleOpenKeySelector} className="p-2.5 bg-white/80 dark:bg-slate-800 rounded-full shadow-sm hover:bg-amber-50" title="Atur API Key">🔑</button>
-              <button onClick={toggleTheme} className="p-2.5 bg-white/80 dark:bg-slate-800 rounded-full shadow-sm">{darkMode ? "☀️" : "🌙"}</button>
-              <button onClick={() => setShowDashboard(true)} className="p-2.5 bg-white/80 dark:bg-slate-800 rounded-full shadow-sm">📊</button>
-              {!demoMode && <button onClick={() => logout()} className="p-2.5 bg-red-50 text-red-500 rounded-full shadow-sm">🚪</button>}
+              <button onClick={toggleTheme} className="p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 dark:border-slate-700 transition-transform active:scale-90" title="Ubah Tema">{darkMode ? "☀️" : "🌙"}</button>
+              <button onClick={() => setShowDashboard(true)} className="p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 dark:border-slate-700 transition-transform active:scale-90" title="Riwayat & Statistik">📊</button>
+              {!demoMode && <button onClick={() => logout()} className="p-3 bg-red-50/60 dark:bg-red-950/30 backdrop-blur-md text-red-500 rounded-2xl shadow-sm border border-red-100/50 dark:border-red-900/30 transition-transform active:scale-90" title="Keluar">🚪</button>}
            </div>
         </div>
 
-        {loading && (
-          <div className="flex-1 flex flex-col items-center justify-center py-20">
-            <div className="w-20 h-20 border-8 border-emerald-500 border-t-transparent rounded-full animate-spin mb-8"></div>
-            <p className="text-xl font-serif font-bold animate-pulse text-emerald-800 dark:text-emerald-200">{loadingMessage || "Membuka lembaran cahaya..."}</p>
+        {loading && selectedMood && (
+          <div className="flex-1 flex flex-col items-center justify-center py-20 animate-fadeIn text-center max-w-lg">
+            <div className="relative mb-16">
+              {/* Enhanced Spiritual Halo Animation */}
+              <div className="absolute inset-[-60px] blur-[80px] rounded-full bg-emerald-400/30 animate-breathing"></div>
+              <div className="absolute inset-[-20px] border-2 border-dashed border-emerald-500/20 rounded-full animate-[spin_20s_linear_infinite]"></div>
+              
+              <div className="relative w-40 h-40 bg-white dark:bg-slate-800 rounded-full shadow-[0_30px_60px_rgba(0,0,0,0.12)] flex items-center justify-center border-2 border-white/50 dark:border-slate-700">
+                <span className="text-8xl animate-bounce drop-shadow-2xl">{currentConfig?.icon || '⏳'}</span>
+                <div className="absolute inset-[-8px] border-4 border-emerald-500 border-t-transparent border-b-transparent rounded-full animate-spin"></div>
+              </div>
+            </div>
+
+            <div className="space-y-6 animate-fadeIn">
+              <h3 className="text-2xl font-serif font-bold text-slate-800 dark:text-white tracking-tight">
+                Meresapi Mood {selectedMood}...
+              </h3>
+              <div className="px-10">
+                <p className="text-lg md:text-xl text-emerald-800 dark:text-emerald-400 font-medium italic leading-relaxed opacity-90">
+                  "{loadingMessage}"
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-14 flex gap-4">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/40 animate-pulse"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse [animation-delay:200ms]"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/40 animate-pulse [animation-delay:400ms]"></div>
+            </div>
           </div>
         )}
 
         {error && (
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl max-w-md text-center border border-red-100 animate-scaleIn">
-            <div className="text-5xl mb-4">⚠️</div>
-            <h3 className="text-xl font-bold mb-2">Kendala Koneksi</h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6 text-sm">{error}</p>
-            <button onClick={() => handleReset()} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold">Kembali</button>
+          <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl max-w-md text-center border border-red-100 dark:border-red-900/20 animate-scaleIn">
+            <div className="text-6xl mb-6">⚠️</div>
+            <h3 className="text-xl font-bold mb-3 text-red-600">Terjadi Kendala</h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-8 text-sm leading-relaxed">{error}</p>
+            <button onClick={() => handleReset()} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg hover:bg-emerald-700 transition-all active:scale-95">Coba Lagi</button>
           </div>
         )}
 
         {!content && !loading && !error && (
           <>
-            <div className="text-center mb-12 animate-fadeInUp">
-              <h1 className="text-4xl md:text-6xl font-serif font-bold text-slate-800 dark:text-white mb-4">Apa kabar hatimu?</h1>
-              <p className="text-slate-600 dark:text-slate-300">Pilih suasana hati Anda saat ini untuk mendapatkan penguatan spiritual.</p>
+            <div className="text-center mb-14 animate-fadeInUp">
+              <h1 className="text-4xl md:text-6xl font-serif font-bold text-slate-800 dark:text-white mb-4 tracking-tight">Apa kabar hatimu?</h1>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Pilih suasana hatimu untuk mendapatkan tuntunan dari kalam Allah.</p>
             </div>
             <MoodSelector onSelect={handleMoodSelect} disabled={loading} selectedMood={selectedMood} />
           </>
@@ -221,16 +204,19 @@ const App: React.FC = () => {
 
         {content && !loading && currentConfig && (
           <ContentDisplay 
+            key={content.quran.surahNumber + '-' + content.quran.ayahNumber} 
             data={content} 
             onReset={handleReset} 
-            onRefresh={() => handleMoodSelect(selectedMood as MoodType)}
-            logId={currentLogId}
+            onRefresh={() => fetchContent(selectedMood as MoodType)}
             config={currentConfig}
           />
         )}
       </main>
 
-      <Dashboard isOpen={showDashboard} onClose={() => setShowDashboard(false)} />
+      <Dashboard 
+        isOpen={showDashboard} 
+        onClose={() => setShowDashboard(false)} 
+      />
     </div>
   );
 

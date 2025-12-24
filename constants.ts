@@ -1,6 +1,7 @@
+
 import { MoodConfig, MoodType } from './types';
 
-// Default theme used when no mood is selected (Grateful/Emerald base)
+// Default theme used when no mood is selected
 const DEFAULT_THEME = {
   background: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-slate-100 dark:from-slate-900 dark:via-emerald-950 dark:to-teal-950',
   primaryText: 'text-emerald-950 dark:text-emerald-50',
@@ -42,7 +43,7 @@ export const MOOD_CONFIGS: MoodConfig[] = [
     icon: '🤲', 
     color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800 dark:hover:bg-emerald-800/40', 
     description: "Berterima kasih",
-    theme: DEFAULT_THEME // Uses the emerald theme
+    theme: DEFAULT_THEME 
   },
   { 
     type: MoodType.OPTIMISTIC, 
@@ -170,7 +171,7 @@ export const MOOD_CONFIGS: MoodConfig[] = [
     color: 'bg-rose-100 text-rose-800 border-rose-200 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-800 dark:hover:bg-rose-800/40', 
     description: "Emosi memuncak",
     theme: {
-      background: 'bg-gradient-to-br from-rose-50 via-orange-50 to-slate-100 dark:from-slate-900 dark:via-rose-950 dark:to-orange-950', // Warm but calming
+      background: 'bg-gradient-to-br from-rose-50 via-orange-50 to-slate-100 dark:from-slate-900 dark:via-rose-950 dark:to-orange-950', 
       primaryText: 'text-rose-950 dark:text-rose-50',
       secondaryText: 'text-rose-900/70 dark:text-rose-200/60',
       accent: 'text-rose-600 dark:text-rose-300',
@@ -254,93 +255,93 @@ export const MOOD_LOADING_MESSAGES: Record<MoodType, string[]> = {
   [MoodType.HAPPY]: [
     "Menjaga senyummu agar tetap merekah...",
     "Mengumpulkan syukur dari setiap sudut hati...",
-    "Semoga kebahagiaan ini menular ke sekitarmu...",
-    "Nikmat mana lagi yang kau dustakan?",
-    "Menjadikan bahagiamu sebagai ladang pahala..."
+    "Semoga kebahagiaan ini menjadi berkah untukmu...",
+    "Nikmat mana lagi yang kau dustakan? Mari kita rayakan...",
+    "Menjadikan setiap tawa sebagai ladang pahala..."
   ],
   [MoodType.GRATEFUL]: [
-    "Mencatat nikmat yang tak terhitung...",
-    "Menambah keberkahan dalam rasa cukup...",
-    "Alhamdulillah atas segala hal...",
+    "Mencatat nikmat yang tak terhitung jemari...",
+    "Menambah keberkahan dalam rasa cukupmu...",
+    "Alhamdulillah atas setiap hembusan napas hari ini...",
     "Barangsiapa bersyukur, niscaya akan Ditambah nikmat-Nya...",
-    "Melihat ke bawah untuk mensyukuri yang ada..."
+    "Melihat betapa banyak cinta Allah di sekelilingmu..."
   ],
   [MoodType.OPTIMISTIC]: [
-    "Menyalakan pelita harapan di hatimu...",
-    "Pertolongan Allah itu sangat dekat...",
-    "Menyiapkan langkah untuk masa depan yang cerah...",
-    "Berprasangka baik pada Allah adalah kunci ketenangan...",
-    "Hasbunallah Wanikmal Wakil..."
+    "Menyalakan pelita harapan di relung batin...",
+    "Yakinlah, pertolongan Allah itu sangat dekat...",
+    "Menyiapkan langkah untuk masa depan yang dijanjikan-Nya...",
+    "Berprasangka baik pada takdir adalah kunci ketenangan...",
+    "Hasbunallah Wanikmal Wakil, Cukuplah Allah bagi kita..."
   ],
   [MoodType.CONFUSED]: [
-    "Memohon petunjuk ke jalan yang lurus...",
-    "Mengurai benang kusut dalam pikiran...",
-    "Mencari cahaya di tengah keraguan...",
-    "Istikharah cinta pada Sang Pemilik Hati...",
-    "Ya Muqollibal Qulub, tetapkan hati ini..."
+    "Memohon petunjuk ke jalan yang paling lurus...",
+    "Mengurai benang kusut dalam pikiranmu perlahan...",
+    "Mencari setitik cahaya di tengah kabut keraguan...",
+    "Istikharah cinta pada Sang Pemilik Segala Keputusan...",
+    "Ya Muqollibal Qulub, semoga hati ini dikuatkan..."
   ],
   [MoodType.ANXIOUS]: [
-    "Tarik napas perlahan, Allah bersamamu...",
-    "Mencari ketenangan di antara badai pikiran...",
-    "Segala urusan ada dalam genggaman-Nya...",
-    "Cukuplah Allah sebagai penolongmu...",
-    "Kekhawatiran tidak mengubah takdir, doa yang mengubahnya..."
+    "Tarik napas perlahan... Allah menggenggam kendali...",
+    "Mencari ketenangan di tengah badai pikiran yang menderu...",
+    "Segala urusan sudah tertulis indah di Lauhul Mahfudz...",
+    "Cukuplah Allah sebagai pelindung dari segala yang kau takutkan...",
+    "Kekhawatiranmu hari ini akan dijawab dengan ketenangan esok..."
   ],
   [MoodType.RESTLESS]: [
-    "Menurunkan ritme jantung yang berpacu...",
-    "Mencari tempat bersandar yang paling kokoh...",
-    "Biarkan Al-Quran membasuh kegelisahanmu...",
+    "Menenangkan ritme jantung yang berpacu lelah...",
+    "Mencari tempat bersandar yang takkan pernah runtuh...",
+    "Biarkan Al-Quran membasuh kegelisahan di jiwamu...",
     "Ingatlah, hanya dengan mengingat Allah hati menjadi tenang...",
-    "Sujudlah, maka hatimu akan lapang..."
+    "Sujudlah lebih lama, agar bebanmu terasa lebih ringan..."
   ],
   [MoodType.GALAU]: [
-    "Mengurai benang kusut di hatimu...",
-    "Mencari kepastian dari Sang Pemilik Hati...",
-    "Biarkan Allah menuntun langkahmu yang ragu...",
-    "Mungkin ini cara Allah memintamu mendekat...",
-    "Hati yang bimbang akan tenang dengan dzikir...",
-    "Menata kembali kepingan rasa..."
+    "Mengurai simpul kebimbangan di lubuk hatimu...",
+    "Mencari kepastian dari Sang Pemilik Hati yang sejati...",
+    "Biarkan cahaya Ilahi menuntun langkahmu yang ragu...",
+    "Mungkin ini cara Allah memintamu bersimpuh lebih dekat...",
+    "Hati yang bimbang akan menemukan pelabuhan di dalam doa...",
+    "Menata kembali kepingan rasa yang sedang berserakan..."
   ],
   [MoodType.TIRED]: [
-    "Istirahatkan jiwamu sejenak pada-Nya...",
-    "Dunia memang tempat berlelah, surga tempat istirahat...",
-    "Mengisi ulang energi batin dengan kalam Ilahi...",
-    "Lelahmu akan menjadi lillah...",
-    "Allah tidak membebani seseorang melainkan sesuai kesanggupannya...",
-    "Rebahkan lelahmu di atas sajadah..."
+    "Istirahatkan jiwamu sejenak dalam dekapan doa-Nya...",
+    "Dunia memang tempat berlelah, biarlah surga jadi tempat istirahatmu...",
+    "Mengisi ulang energi batin dengan embun Kalam Ilahi...",
+    "Lelahmu hari ini, insyaAllah akan menjadi lillah di mata-Nya...",
+    "Allah tidak membebani hamba-Nya di luar kesanggupannya...",
+    "Rebahkan lelahmu di atas sajadah yang penuh rindu..."
   ],
   [MoodType.ANGRY]: [
-    "Meredam api dengan air wudhu...",
-    "Menjernihkan hati yang sedang keruh...",
-    "Kesabaran adalah cahaya yang terang...",
-    "Orang kuat adalah yang mampu menahan amarahnya...",
-    "Ganti amarahmu dengan istighfar..."
+    "Meredam api amarah dengan sejuknya air wudhu...",
+    "Menjernihkan kolam hati yang sedang keruh oleh emosi...",
+    "Kesabaran adalah perisai yang paling kokoh saat ini...",
+    "Orang kuat adalah ia yang mampu menahan gejolak amarahnya...",
+    "Ganti setiap detak marahmu dengan lantunan istighfar..."
   ],
   [MoodType.DISAPPOINTED]: [
-    "Mengobati hati yang sedang patah...",
-    "Manusia berencana, Allah sebaik-baik perencana...",
-    "Mencari hikmah di balik setiap kejadian...",
-    "Boleh jadi kamu membenci sesuatu, padahal itu baik bagimu...",
-    "Allah mengganti yang hilang dengan yang lebih baik..."
+    "Mengobati luka hati yang sedang teriris kecewa...",
+    "Manusia boleh berencana, tapi Allah sebaik-baik penulis cerita...",
+    "Mencari permata hikmah di balik reruntuhan ekspektasimu...",
+    "Boleh jadi kamu membenci sesuatu, padahal itu pintu kebaikan...",
+    "Allah akan mengganti yang hilang dengan yang jauh lebih indah..."
   ],
   [MoodType.LONELY]: [
-    "Allah lebih dekat dari urat lehermu...",
-    "Engkau tidak pernah benar-benar sendirian...",
-    "Mendatangkan teman terbaik: Al-Quran...",
-    "Allah adalah sebaik-baik teman curhat...",
-    "Kesepian adalah undangan untuk bermunajat berdua dengan-Nya..."
+    "Ingatlah, Allah lebih dekat dari urat lehermu sendiri...",
+    "Engkau tidak pernah benar-benar sendiri di bawah langit-Nya...",
+    "Mendatangkan teman terbaik sepanjang masa: Al-Quran...",
+    "Allah adalah pendengar paling setia di setiap malam sepimu...",
+    "Kesepian adalah undangan eksklusif untuk bermunajat pada-Nya..."
   ],
   [MoodType.SAD]: [
-    "Setiap air mata didengar oleh-Nya...",
-    "Setelah kesulitan pasti ada kemudahan...",
-    "Memeluk hatimu dengan ayat-ayat cinta...",
-    "La Tahzan, Innallaha Ma'ana...",
-    "Allah menyayangi hati yang sabar..."
+    "Setiap tetes air matamu didengar oleh Ar-Rahman...",
+    "Setelah kesulitan, pasti... pasti ada kemudahan...",
+    "Memeluk erat hatimu dengan ayat-ayat cinta dari surga...",
+    "La Tahzan, Jangan bersedih... Allah bersama kita...",
+    "Allah sangat mencintai hati yang hancur namun tetap bersabar..."
   ]
 };
 
 export const getRandomLoadingMessage = (mood: MoodType): string => {
   const messages = MOOD_LOADING_MESSAGES[mood];
-  if (!messages) return "Sedang mencari ayat penenang...";
+  if (!messages) return "Sedang mencari ayat penenang untukmu...";
   return messages[Math.floor(Math.random() * messages.length)];
 };

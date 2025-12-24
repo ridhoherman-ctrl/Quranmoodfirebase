@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // Kita biarkan API_KEY dikelola oleh environment agar tidak bentrok
       'process.env.FIREBASE_API_KEY': JSON.stringify(env.FIREBASE_API_KEY),
       'process.env.FIREBASE_PROJECT_ID': JSON.stringify(env.FIREBASE_PROJECT_ID),
       'process.env.FIREBASE_SENDER_ID': JSON.stringify(env.FIREBASE_SENDER_ID),
